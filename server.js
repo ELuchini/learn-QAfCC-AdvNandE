@@ -30,6 +30,8 @@ app.use(
     resave: true,
     saveUninitialized: true,
     cookie: { secure: false },
+    key: "express.sid",
+    store: store,
   }),
 );
 
@@ -61,7 +63,11 @@ myDB(async (client) => {
   let currentUsers = 0;
   io.on("connection", (socket) => {
     ++currentUsers;
-    io.emit("user count", currentUsers);
+    io.emit("user", {
+      username: socket.request.user.username,
+      currentUsers,
+      connected: true,
+    });
     console.log("A user has connected");
     socket.on("disconnect", () => {
       console.log("A user has disconnected");
