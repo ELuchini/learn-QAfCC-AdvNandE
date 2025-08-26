@@ -1,10 +1,12 @@
-const bcrypt = require("bcrypt");
-const passport = require("passport");
-const LocalStrategy = require("passport-local");
-const { ObjectID } = require("mongodb");
-const GitHubStrategy = require("passport-github").Strategy;
+import { compareSync } from "bcrypt";
+import pkg from 'passport';
+const { use, serializeUser, deserializeUser } = pkg;
+import LocalStrategy from "passport-local";
+import { Strategy as GitHubStrategy } from "passport-github";
+import pkgmongo from "mongodb";
+const { ObjectID } = pkgmongo;
 
-module.exports = function (app, myDataBase) {
+export default function (app, myDataBase) {
   /*  passport.use(
     new LocalStrategy((username, password, done) => {
       myDataBase.findOne({ username: username }, (err, user) => {
@@ -17,7 +19,7 @@ module.exports = function (app, myDataBase) {
     }),
   ); */
 
-  passport.use(
+  use(
     new GitHubStrategy(
       {
         clientID: process.env.GITHUB_CLIENT_ID,
@@ -58,7 +60,7 @@ module.exports = function (app, myDataBase) {
     ),
   );
 
-  passport.use(
+  use(
     new LocalStrategy((username, password, done) => {
       myDataBase.findOne({ username: username }, (err, user) => {
         console.log(`User ${username} attempted to log in.`);
@@ -68,7 +70,7 @@ module.exports = function (app, myDataBase) {
         if (!user) {
           return done(null, false);
         }
-        if (!bcrypt.compareSync(password, user.password)) {
+        if (!compareSync(password, user.password)) {
           return done(null, false);
         }
         return done(null, user);
@@ -76,11 +78,11 @@ module.exports = function (app, myDataBase) {
     }),
   );
 
-  passport.serializeUser((user, done) => {
+  serializeUser((user, done) => {
     done(null, user._id);
   });
 
-  passport.deserializeUser((id, done) => {
+  deserializeUser((id, done) => {
     myDataBase.findOne({ _id: new ObjectID(id) }, (err, doc) => {
       done(null, doc);
     });

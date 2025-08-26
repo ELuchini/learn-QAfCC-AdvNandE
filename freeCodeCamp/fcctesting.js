@@ -33,8 +33,7 @@
  */
 
 "use strict";
-
-const fs = require("fs");
+import fs from "fs";
 
 const allowedOrigins = [
   /^https?:\/\/([\w-]+\.)*freecodecamp.org/,
@@ -45,7 +44,7 @@ const allowedOrigins = [
   null,
 ];
 
-module.exports = function (app) {
+const fcctesting = function (app) {
   app.use(function (req, res, next) {
     const origin = req.get("origin");
 
@@ -128,3 +127,5 @@ module.exports = function (app) {
     res.json(JSON.stringify(stack));
   });
 };
+
+export default fcctesting;

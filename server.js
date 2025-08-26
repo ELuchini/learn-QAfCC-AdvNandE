@@ -1,25 +1,34 @@
 "use strict";
-require("dotenv").config();
-const express = require("express");
-const myDB = require("./connection");
-const fccTesting = require("./freeCodeCamp/fcctesting.js");
-const session = require("express-session");
-const passport = require("passport");
+import dotenv from "dotenv";
+dotenv.config();
+import express, { static as sta, json, urlencoded } from "express";
+import myDB from "./connection.js";
+import fccTesting from "./freeCodeCamp/fcctesting.js";
+import session from "express-session";
+import passport from "passport";
+/* const { initialize, session: _session } = pkgpass; */
 
-const routes = require("./routes.js");
-const auth = require("./auth.js");
+import routes from "./routes.js";
+import auth from "./auth.js";
 
 const app = express();
 
-const http = require("http").createServer(app);
-const io = require("socket.io")(http);
+/* import dotenv from 'dotenv';
+dotenv.config(); */
 
-const passportSocketIo = require("passport.socketio");
-const cookieParser = require("cookie-parser");
+import { createServer } from "http";
+import Server from "socket.io";
 
-const MongoStore = require("connect-mongo")(session);
+
+const http = createServer(app);
+const io = new Server(http);
+
+import { authorize } from "passport.socketio";
+import cookieParser from "cookie-parser";
+
+import MongoStore from "connect-mongo";
 const URI = process.env.MONGO_URI;
-const store = new MongoStore({ url: URI });
+const store = MongoStore.create({ mongoUrl: URI, });
 
 app.set("view engine", "pug");
 app.set("views", "./views/pug");
@@ -40,12 +49,12 @@ app.use(passport.session());
 
 fccTesting(app); //For FCC testing purposes
 
-app.use("/public", express.static(process.cwd() + "/public"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use("/public", sta(process.cwd() + "/public"));
+app.use(json());
+app.use(urlencoded({ extended: true }));
 
 io.use(
-  passportSocketIo.authorize({
+  authorize({
     cookieParser: cookieParser,
     key: "express.sid",
     secret: process.env.SESSION_SECRET,

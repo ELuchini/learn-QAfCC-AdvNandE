@@ -1,10 +1,15 @@
 // Do not change this file
-require('dotenv').config();
-const { MongoClient } = require('mongodb');
+import dotenv from 'dotenv';
+dotenv.config();
+import pkg from "mongodb";
+const { MongoClient } = pkg;
 
 async function main(callback) {
     const URI = process.env.MONGO_URI; // Declare MONGO_URI in your .env file
-    const client = new MongoClient(URI, { useNewUrlParser: true, useUnifiedTopology: true });
+    const client = new MongoClient(URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    });
 
     try {
         // Connect to the MongoDB cluster
@@ -12,12 +17,11 @@ async function main(callback) {
 
         // Make the appropriate DB calls
         await callback(client);
-
     } catch (e) {
         // Catch any errors
         console.error(e);
-        throw new Error('Unable to Connect to Database')
+        throw new Error("Unable to Connect to Database");
     }
 }
 
-module.exports = main;
+export default main;
