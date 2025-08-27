@@ -1,8 +1,6 @@
 import { hashSync } from "bcrypt";
-import pkg from 'passport';
-const { authenticate } = pkg;
 
-export default function (app, myDataBase) {
+export default function (app, myDataBase, passport) {
   app.route("/").get((req, res) => {
     res.render("index", {
       title: "Connected to Database",
@@ -15,9 +13,12 @@ export default function (app, myDataBase) {
 
   app
     .route("/login")
-    .post(authenticate("local", { failureRedirect: "/" }), (req, res) => {
-      res.redirect("/profile");
-    });
+    .post(
+      passport.authenticate("local", { failureRedirect: "/" }),
+      (req, res) => {
+        res.redirect("/profile");
+      },
+    );
 
   app.route("/profile").get(ensureAuthenticated, (req, res) => {
     res.render("profile", { username: req.user.username });
@@ -55,7 +56,7 @@ export default function (app, myDataBase) {
         }
       });
     },
-    authenticate("local", { failureRedirect: "/" }),
+    passport.authenticate("local", { failureRedirect: "/" }),
     (req, res, next) => {
       res.redirect("/profile");
     },
@@ -65,13 +66,16 @@ export default function (app, myDataBase) {
     res.status(404).type("text").send("Not Found");
   });
 
-  app.route("/auth/github").get(authenticate("github"));
+  app.route("/auth/github").get(passport.authenticate("github"));
   app
     .route("/auth/github/callback")
-    .get(authenticate("github", { failureRedirect: "/" }), (req, res) => {
-      req.session.user_id = req.user.id;
-      res.redirect("/chat");
-    });
+    .get(
+      passport.authenticate("github", { failureRedirect: "/" }),
+      (req, res) => {
+        req.session.user_id = req.user.id;
+        res.redirect("/chat");
+      },
+    );
 
   /* app.route('/auth/github/callback')// Ejemplo de uso de passport. Se puede borrar.
   .get(passport.authenticate('github', { failureRedirect: '/' }), (req,res) => {

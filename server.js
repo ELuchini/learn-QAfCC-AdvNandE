@@ -19,7 +19,6 @@ dotenv.config(); */
 import { createServer } from "http";
 import Server from "socket.io";
 
-
 const http = createServer(app);
 const io = new Server(http);
 
@@ -28,7 +27,7 @@ import cookieParser from "cookie-parser";
 
 import MongoStore from "connect-mongo";
 const URI = process.env.MONGO_URI;
-const store = MongoStore.create({ mongoUrl: URI, });
+const store = MongoStore.create({ mongoUrl: URI });
 
 app.set("view engine", "pug");
 app.set("views", "./views/pug");
@@ -66,7 +65,7 @@ io.use(
 
 myDB(async (client) => {
   const myDataBase = await client.db("database").collection("users");
-  routes(app, myDataBase);
+  routes(app, myDataBase, passport);
   auth(app, myDataBase);
 
   let currentUsers = 0;

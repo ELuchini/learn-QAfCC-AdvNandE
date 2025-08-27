@@ -1,6 +1,6 @@
 import { compareSync } from "bcrypt";
-import pkg from 'passport';
-const { use, serializeUser, deserializeUser } = pkg;
+import passport from 'passport';
+/* const { use, serializeUser, deserializeUser } = pkg; */
 import LocalStrategy from "passport-local";
 import { Strategy as GitHubStrategy } from "passport-github";
 import pkgmongo from "mongodb";
@@ -19,7 +19,7 @@ export default function (app, myDataBase) {
     }),
   ); */
 
-  use(
+  passport.use(
     new GitHubStrategy(
       {
         clientID: process.env.GITHUB_CLIENT_ID,
@@ -60,7 +60,7 @@ export default function (app, myDataBase) {
     ),
   );
 
-  use(
+  passport.use(
     new LocalStrategy((username, password, done) => {
       myDataBase.findOne({ username: username }, (err, user) => {
         console.log(`User ${username} attempted to log in.`);
@@ -78,13 +78,13 @@ export default function (app, myDataBase) {
     }),
   );
 
-  serializeUser((user, done) => {
+  passport.serializeUser((user, done) => {
     done(null, user._id);
   });
 
-  deserializeUser((id, done) => {
+  passport.deserializeUser((id, done) => {
     myDataBase.findOne({ _id: new ObjectID(id) }, (err, doc) => {
       done(null, doc);
     });
   });
-};
+}

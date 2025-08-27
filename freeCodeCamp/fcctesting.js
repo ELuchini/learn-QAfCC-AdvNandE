@@ -33,7 +33,8 @@
  */
 
 "use strict";
-import fs from "fs";
+
+import { readFile } from "fs";
 
 const allowedOrigins = [
   /^https?:\/\/([\w-]+\.)*freecodecamp.org/,
@@ -41,33 +42,17 @@ const allowedOrigins = [
   /^https:\/\/([\w-]+\.)*gitpod.io/,
   /^https:\/\/([\w-]+\.)*github.dev/,
   /^http:\/\/localhost:\d+/,
-  null,
 ];
 
 const fcctesting = function (app) {
   app.use(function (req, res, next) {
     const origin = req.get("origin");
-
-    // Permitir solicitudes sin origen (testing local) o con orígenes válidos
-    if (
-      !origin ||
-      origin === "null" ||
-      allowedOrigins.some((regex) => regex.test(origin))
-    ) {
-      res.setHeader("Access-Control-Allow-Origin", origin || "*");
-      console.log("Origin allowed:", origin || "no-origin/null");
+    if (allowedOrigins.some((regex) => regex.test(origin))) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      console.log(origin);
     }
 
     res.setHeader("Access-Control-Allow-Credentials", true);
-    res.setHeader(
-      "Access-Control-Allow-Methods",
-      "GET, POST, PUT, DELETE, OPTIONS",
-    );
-    res.setHeader(
-      "Access-Control-Allow-Headers",
-      "Content-Type, Authorization",
-    );
-
     next();
   });
 
@@ -79,7 +64,7 @@ const fcctesting = function (app) {
 
   app.route("/_api/server.js").get(function (req, res, next) {
     console.log("requested");
-    fs.readFile(process.cwd() + "/server.js", function (err, data) {
+    readFile(process.cwd() + "/server.js", function (err, data) {
       if (err) return next(err);
       res.send(data.toString());
     });
@@ -87,7 +72,7 @@ const fcctesting = function (app) {
 
   app.route("/_api/routes.js").get(function (req, res, next) {
     console.log("requested");
-    fs.readFile(process.cwd() + "/routes.js", function (err, data) {
+    readFile(process.cwd() + "/routes.js", function (err, data) {
       if (err) return next(err);
       res.send(data.toString());
     });
@@ -95,7 +80,7 @@ const fcctesting = function (app) {
 
   app.route("/_api/auth.js").get(function (req, res, next) {
     console.log("requested");
-    fs.readFile(process.cwd() + "/auth.js", function (err, data) {
+    readFile(process.cwd() + "/auth.js", function (err, data) {
       if (err) return next(err);
       res.send(data.toString());
     });
@@ -103,7 +88,7 @@ const fcctesting = function (app) {
 
   app.route("/_api/package.json").get(function (req, res, next) {
     console.log("requested");
-    fs.readFile(process.cwd() + "/package.json", "utf-8", function (err, data) {
+    readFile(process.cwd() + "/package.json", "utf-8", function (err, data) {
       if (err) return next(err);
       res.json(JSON.parse(data));
     });
@@ -111,7 +96,7 @@ const fcctesting = function (app) {
 
   app.get("/_api/app-info", function (req, res) {
     var hs = Object.keys(res._headers).filter(
-      (h) => !h.match(/^access-control-\w+/),
+      (h) => !h.match(/^access-control-\w+/)
     );
     var hObj = {};
     hs.forEach((h) => {
