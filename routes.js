@@ -2,20 +2,36 @@ import { hashSync } from "bcrypt";
 
 export default function (app, myDataBase, passport) {
   app.route("/").get((req, res) => {
+    console.log("GET /");
     res.render("index", {
       title: "Connected to Database",
       message: "Please log in",
       showLogin: true,
       showRegistration: true,
       showSocialAuth: true,
+      error: req.query.error || null,
     });
   });
 
   app
     .route("/login")
     .post(
-      passport.authenticate("local", { failureRedirect: "/" }),
+      (req, res, next) => {
+        console.log("POST /login", req.body);
+        if (!req.body.username || !req.body.password) {
+          console.error("[LOGIN] Faltan campos username o password");
+        }
+        next();
+      },
+      (req, res, next) => {
+        console.log("[LOGIN] Antes de passport.authenticate");
+        next();
+      },
+      passport.authenticate("local", {
+        failureRedirect: "/?error=Usuario%20o%20contrase%C3%B1a%20incorrectos",
+      }),
       (req, res) => {
+        console.log("Login successful for user:", req.user && req.user.username);
         res.redirect("/profile");
       },
     );
@@ -31,12 +47,19 @@ export default function (app, myDataBase, passport) {
 
   app.route("/register").post(
     (req, res, next) => {
+      console.log("POST /register", req.body);
+      if (!req.body.username || !req.body.password) {
+        console.error("[REGISTER] Faltan campos username o password");
+        return res.redirect("/?error=Faltan%20campos%20obligatorios");
+      }
       const hash = hashSync(req.body.password, 12);
       myDataBase.findOne({ username: req.body.username }, (err, user) => {
         if (err) {
-          next(err);
+          console.error("Error in findOne /register:", err);
+          return res.redirect("/?error=Error%20de%20base%20de%20datos");
         } else if (user) {
-          res.redirect("/");
+          console.log("User already exists:", req.body.username);
+          return res.redirect("/?error=El%20usuario%20ya%20existe");
         } else {
           myDataBase.insertOne(
             {
@@ -45,8 +68,10 @@ export default function (app, myDataBase, passport) {
             },
             (err, doc) => {
               if (err) {
-                res.redirect("/");
+                console.error("Error in insertOne /register:", err);
+                return res.redirect("/?error=Error%20al%20registrar%20usuario");
               } else {
+                console.log("User registered:", req.body.username);
                 // The inserted document is held within
                 // the ops property of the doc
                 next(null, doc.ops[0]);
@@ -56,8 +81,15 @@ export default function (app, myDataBase, passport) {
         }
       });
     },
-    passport.authenticate("local", { failureRedirect: "/" }),
     (req, res, next) => {
+      console.log("[REGISTER] Antes de passport.authenticate");
+      next();
+    },
+    passport.authenticate("local", {
+      failureRedirect: "/?error=Error%20al%20autenticar%20despu%C3%A9s%20de%20registrar",
+    }),
+    (req, res, next) => {
+      console.log("Registration and login successful for user:", req.user && req.user.username);
       res.redirect("/profile");
     },
   );

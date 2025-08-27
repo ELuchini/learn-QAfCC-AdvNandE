@@ -62,17 +62,23 @@ export default function (app, myDataBase) {
 
   passport.use(
     new LocalStrategy((username, password, done) => {
+      console.log("[PASSPORT-LOCAL] Intentando autenticar:", username);
       myDataBase.findOne({ username: username }, (err, user) => {
-        console.log(`User ${username} attempted to log in.`);
         if (err) {
+          console.error("[PASSPORT-LOCAL] Error en findOne:", err);
           return done(err);
         }
         if (!user) {
+          console.warn("[PASSPORT-LOCAL] Usuario no encontrado:", username);
           return done(null, false);
         }
-        if (!compareSync(password, user.password)) {
+        console.log("[PASSPORT-LOCAL] Usuario encontrado:", user.username);
+        const passwordMatch = compareSync(password, user.password);
+        if (!passwordMatch) {
+          console.warn("[PASSPORT-LOCAL] Contraseña incorrecta para:", username);
           return done(null, false);
         }
+        console.log("[PASSPORT-LOCAL] Autenticación exitosa para:", username);
         return done(null, user);
       });
     }),
